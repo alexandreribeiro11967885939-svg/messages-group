@@ -1,1 +1,137 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chat Público</title>
 
+<style>
+    body {
+        background: #111;
+        color: #fff;
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+        height: 100vh;
+    }
+
+    h1 {
+        text-align: center;
+        padding: 15px;
+        background: #222;
+        margin: 0;
+        border-bottom: 1px solid #333;
+        color: #f7d36a;
+    }
+
+    #chat {
+        flex: 1;
+        overflow-y: auto;
+        padding: 15px;
+    }
+
+    .msg {
+        background: #222;
+        padding: 10px;
+        margin: 8px 0;
+        border-radius: 10px;
+        border: 1px solid #444;
+        max-width: 85%;
+    }
+
+    .usuario {
+        color: #7bcfff;
+        font-weight: bold;
+        margin-bottom: 3px;
+    }
+
+    #barra {
+        display: flex;
+        padding: 10px;
+        background: #222;
+        border-top: 1px solid #333;
+    }
+
+    input {
+        flex: 1;
+        padding: 10px;
+        border-radius: 8px;
+        border: none;
+        background: #333;
+        color: #fff;
+        margin-right: 10px;
+    }
+
+    button {
+        padding: 10px 15px;
+        background: #f7d36a;
+        border: none;
+        border-radius: 8px;
+        font-weight: bold;
+        cursor: pointer;
+    }
+</style>
+
+</head>
+<body>
+
+<h1>💬 Chat Público</h1>
+
+<div id="chat"></div>
+
+<div id="barra">
+    <input id="mensagem" placeholder="Digite sua mensagem...">
+    <button onclick="enviar()">Enviar</button>
+</div>
+
+<script>
+async function carregar() {
+    const area = document.getElementById("chat");
+
+    const resp = await fetch("/api/chat_publico");
+    const dados = await resp.json();
+
+    area.innerHTML = "";
+
+    dados.forEach(msg => {
+        area.innerHTML += `
+            <div class="msg">
+                <div class="usuario">${msg.usuario || "Anônimo"}</div>
+                ${msg.mensagem}
+                <br>
+                <small style="color:#777">${new Date(msg.criado_em).toLocaleString()}</small>
+            </div>
+        `;
+    });
+
+    area.scrollTop = area.scrollHeight;
+}
+
+async function enviar() {
+    const campo = document.getElementById("mensagem");
+    const texto = campo.value.trim();
+
+    if (texto === "") return;
+
+    await fetch("/api/chat_publico", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({
+            usuario: "Visitante",   // pode mudar depois
+            mensagem: texto
+        })
+    });
+
+    campo.value = "";
+    carregar();
+}
+
+// Atualiza sozinho a cada 2s
+setInterval(carregar, 2000);
+carregar();
+</script>
+
+</body>
+</html>
